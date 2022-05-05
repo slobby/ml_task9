@@ -7,6 +7,7 @@ authors = ["Andrew <andslobby@gmail.com>"]
 
 [tool.poetry.scripts]
 train = "forest_cover.run:train"
+eda = "forest_cover.eda:eda"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -16,6 +17,7 @@ pandas-profiling = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+autopep8 = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
