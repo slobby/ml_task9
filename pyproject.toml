@@ -6,7 +6,7 @@ authors = ["Andrew <andslobby@gmail.com>"]
 
 
 [tool.poetry.scripts]
-train = "forest_cover.run:train"
+train = "forest_cover.train:train"
 eda = "forest_cover.eda:eda"
 
 [tool.poetry.dependencies]
