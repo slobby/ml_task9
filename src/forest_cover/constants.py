@@ -1,14 +1,14 @@
 # input data dir
-DATA_DIR = 'data'
+DATA_DIR = "data"
 
 # input data path
-DATA_PATH = 'train.csv'
+DATA_PATH = "train.csv"
 
 # output dir
-OUTPUT_DIR = 'output'
+OUTPUT_DIR = "output"
 
 # output model path
-MODEL_PATH = 'model.joblib'
+MODEL_PATH = "model.joblib"
 
 # eda title
 EDA_TITLE = "Forest Cover Report"
@@ -17,4 +17,10 @@ EDA_TITLE = "Forest Cover Report"
 EDA_PATH = "Forest_report.html"
 
 # target name column
-TARGET = 'Cover_Type'
+TARGET = "Cover_Type"
+
+# models
+MODELS = ["tree", "knn"]
+
+# knn weigths
+WEIGTHS = ["uniform", "distance"]

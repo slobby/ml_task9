@@ -1,17 +1,17 @@
-from pathlib import Path, PurePath
+from pathlib import Path
+from typing import Union
 import click
-import numpy as np
 import pandas as pd
-from pandas_profiling import ProfileReport
+from pandas_profiling import ProfileReport  # type: ignore
 
-from forest_cover.constants import DATA_DIR, DATA_PATH, EDA_PATH, EDA_TITLE, OUTPUT_DIR
-from forest_cover.exceptions import WrongFileException
+from forest_cover.constants import DATA_DIR, DATA_PATH
+from forest_cover.constants import EDA_PATH, EDA_TITLE, OUTPUT_DIR
 
 
 @click.command()
 @click.option(
-    '-i',
-    '--input',
+    "-i",
+    "--input",
     default=Path(DATA_DIR).joinpath(DATA_PATH),
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     show_default=True,
@@ -23,7 +23,7 @@ from forest_cover.exceptions import WrongFileException
     type=click.Path(dir_okay=False, path_type=Path),
     show_default=True,
 )
-def eda(input: Path = None, output: Path = None) -> None:
+def eda(input: Union[Path, None] = None, output: Union[Path, None] = None) -> None:
     if input is None:
         input = Path(DATA_DIR).joinpath(DATA_PATH)
     if input.exists():
@@ -32,4 +32,4 @@ def eda(input: Path = None, output: Path = None) -> None:
         profile = ProfileReport(df, title=EDA_TITLE, explorative=True)
         profile.to_file(output)
     else:
-        raise WrongFileException(f'File [path] doesn`t exist')
+        raise ValueError()
