@@ -45,12 +45,15 @@ poetry install
 ```
 
 Screenshort from MLFlow
+
 ![MLFlow](https://github.com/slobby/ml_task9/blob/master/pic/ml.png)
 
 Screenshort from flake and black
+
 ![flake and black](https://github.com/slobby/ml_task9/blob/master/pic/flake.png)
 
 Screenshort from mypy
+
 ![mypy](https://github.com/slobby/ml_task9/blob/master/pic/mypy.png)
 
 
