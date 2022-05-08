@@ -68,6 +68,12 @@ Screenshort from MLFlow
 
 Screenshort from flake and black
 
+To run black run the following command:
+
+```
+poetry run blak .
+```
+
 ![flake and black](https://github.com/slobby/ml_task9/blob/master/pic/flake.png)
 
 Screenshort from mypy
