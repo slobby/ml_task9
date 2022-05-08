@@ -2,8 +2,7 @@ from typing import Union
 from pathlib import Path
 import pandas as pd
 from joblib import dump
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_validate
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
 
@@ -37,6 +36,13 @@ def create_pipeline(
     )
 
     return Pipeline(steps=pipeline_steps)
+
+
+def cv_validate_metrics(pipe: Pipeline, features_train: pd.DataFrame, target_train: pd.Series) -> tuple[float, float, float]:
+    scoring = ['accuracy', 'f1_weighted', 'roc_auc_ovr_weighted']
+    scores = cross_validate(pipe, features_train,
+                            target_train, scoring=scoring)
+    return scores['test_accuracy'].mean(), scores['test_f1_weighted'].mean(), scores['test_roc_auc_ovr_weighted'].mean()
 
 
 @click.command()
@@ -95,13 +101,12 @@ def train(
     min_samples_leaf: int
 ) -> None:
     features_train, target_train = get_dataset(input_path)
-    features_train, features_val, target_train, target_val = train_test_split(
-        features_train, target_train, test_size=0.2, random_state=42
-    )
+
     pipeline = create_pipeline(
         use_scaler, max_depth, max_features, min_samples_leaf, random_state)
     pipeline.fit(features_train, target_train)
-    accuracy = accuracy_score(target_val, pipeline.predict(features_val))
-    click.echo(f"Accuracy: {accuracy}.")
+    accuracy, f1, roc_auc = cv_validate_metrics(
+        pipeline, features_train, target_train)
+    click.echo(f"Accuracy: {accuracy}.\nF1: {f1}.\nROC_AUC: {roc_auc}.")
     dump(pipeline, output_path)
     click.echo(f"Model is saved to {output_path}.")
