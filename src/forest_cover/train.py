@@ -59,6 +59,7 @@ def cv_validate_metrics(
     show_default=True,
 )
 @click.option("--use-scaler/--no-scaler", default=False, type=bool, show_default=True)
+@click.option("--estimators", default=100, type=int, show_default=True)
 @click.option("--max-depth", default=100, type=int, show_default=True)
 @click.option(
     "--max-features",
@@ -80,6 +81,7 @@ def train(
     random_state: int,
     model: str,
     use_scaler: bool,
+    estimators: int,
     max_depth: int,
     max_features: float,
     min_samples_leaf: int,
@@ -99,6 +101,7 @@ def train(
         pipeline = create_pipeline(
             model,
             use_scaler,
+            estimators,
             max_depth,
             max_features,
             min_samples_leaf,
@@ -112,7 +115,7 @@ def train(
             pipeline, features_train, target_train
         )
         model_t = (
-            "DecisionTreeClassifier" if model == MODELS[0] else "KNeighborsClassifier"
+            "RandomForestClassifier" if model == MODELS[0] else "KNeighborsClassifier"
         )
         mlflow.log_metric("accuracy", accuracy)
         mlflow.log_metric("f1", f1)

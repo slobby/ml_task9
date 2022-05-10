@@ -8,6 +8,7 @@ authors = ["Andrew <andslobby@gmail.com>"]
 [tool.poetry.scripts]
 train = "forest_cover.train:train"
 eda = "forest_cover.eda:eda"
+nested = "forest_cover.nestedcv:nested"
 
 [tool.poetry.dependencies]
 python = "^3.9"
