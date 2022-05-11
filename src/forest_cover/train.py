@@ -1,11 +1,8 @@
-from pathlib import Path
-import pandas as pd
-from joblib import dump
-from sklearn.model_selection import cross_validate
 import click
-from sklearn.pipeline import Pipeline
+from joblib import dump
 import mlflow
-import mlflow.sklearn
+import pandas as pd
+from pathlib import Path
 
 from forest_cover.constants import (
     DATA_DIR,
@@ -13,27 +10,10 @@ from forest_cover.constants import (
     MODEL_PATH,
     MODELS,
     OUTPUT_DIR,
-    TARGET,
     WEIGTHS,
 )
+from .utils import cv_validate_metrics, get_cat_num, get_dataset, write_to_mlflow
 from .pipeline import create_pipeline
-
-
-def get_dataset(input_path: Path) -> tuple[pd.DataFrame, pd.Series]:
-    dataset = pd.read_csv(input_path)
-    return (dataset.drop(TARGET, axis=1), dataset[TARGET])
-
-
-def cv_validate_metrics(
-    pipe: Pipeline, features_train: pd.DataFrame, target_train: pd.Series
-) -> tuple[float, float, float]:
-    scoring = ["accuracy", "f1_weighted", "roc_auc_ovr_weighted"]
-    scores = cross_validate(pipe, features_train, target_train, scoring=scoring)
-    return (
-        scores["test_accuracy"].mean(),
-        scores["test_f1_weighted"].mean(),
-        scores["test_roc_auc_ovr_weighted"].mean(),
-    )
 
 
 @click.command()
@@ -88,48 +68,36 @@ def train(
     neighbors: int,
     weights: str,
 ) -> None:
+    params = {'model': model,
+              'use_scaler': use_scaler,
+              'n_estimators': estimators,
+              'max_depth': max_depth,
+              'max_features': max_features,
+              'min_samples_leaf': min_samples_leaf,
+              'n_neighbors': neighbors,
+              'weights': weights}
     features_train, target_train = get_dataset(input_path)
-    categoricals = []
-    numericals = []
-    for col in features_train.columns:
-        if col.startswith("Soil_Type") or col.startswith("Wilderness_Area"):
-            categoricals.append(col)
-        else:
-            numericals.append(col)
+    categoricals, numericals = get_cat_num(features_train)
+
+    pipeline = create_pipeline(
+        model,
+        use_scaler,
+        estimators,
+        max_depth,
+        max_features,
+        min_samples_leaf,
+        random_state,
+        neighbors,
+        weights,
+        categoricals,
+        numericals,
+    )
 
     with mlflow.start_run():
-        pipeline = create_pipeline(
-            model,
-            use_scaler,
-            estimators,
-            max_depth,
-            max_features,
-            min_samples_leaf,
-            random_state,
-            neighbors,
-            weights,
-            categoricals,
-            numericals,
-        )
-        accuracy, f1, roc_auc = cv_validate_metrics(
-            pipeline, features_train, target_train
-        )
-        model_t = (
-            "RandomForestClassifier" if model == MODELS[0] else "KNeighborsClassifier"
-        )
-        mlflow.log_metric("accuracy", accuracy)
-        mlflow.log_metric("f1", f1)
-        mlflow.log_metric("roc_auc", roc_auc)
-        mlflow.log_param("use_scaler", use_scaler)
-        mlflow.log_param("model", model_t)
-        if model == MODELS[0]:
-            mlflow.log_param("max_depth", max_depth)
-            mlflow.log_param("max_features", max_features)
-            mlflow.log_param("min_samples_leaf", min_samples_leaf)
-        if model == MODELS[1]:
-            mlflow.log_param("neighbors", neighbors)
-            mlflow.log_param("weights", weights)
-        mlflow.sklearn.log_model(pipeline, "models")
-        click.echo(f"Accuracy: {accuracy}.\nF1: {f1}.\nROC_AUC: {roc_auc}.")
+        write_to_mlflow(pipeline,
+                        cv_validate_metrics,
+                        features_train,
+                        target_train,
+                        params)
         dump(pipeline, output_path)
         click.echo(f"Model is saved to {output_path}.")

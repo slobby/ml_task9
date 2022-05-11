@@ -1,7 +1,6 @@
 ## Task9.
 
 #### What wasn`t done:
-Task9 \
 Task11\
 Task14\
 Task15
@@ -33,6 +32,7 @@ Options:
   --random-state INTEGER        [default: 42]
   --model [tree|knn]            [default: tree]
   --use-scaler / --no-scaler    [default: no-scaler]
+  --estimators INTEGER          [default: 100]
   --max-depth INTEGER           [default: 100]
   --max-features FLOAT RANGE    [default: 1; 0<x<=1]
   --min-samples-leaf INTEGER    [default: 1]
@@ -51,7 +51,31 @@ poetry run mlflow ui
 poetry run eda
 ```
 
-then open in dir /data/report.html 
+then open in dir /data/report.html
+
+8. Run nestedCD with the following command:
+
+```
+poetry run nested [OPTIONS]
+```
+
+You can configure additional options (such as hyperparameters) in the CLI. To get a full list of them, use help:
+
+```
+poetry run nested --help
+```
+
+```
+Usage: nested [OPTIONS]
+
+Options:
+  -i, --input-path FILE   [default: data\train.csv]
+  -o, --output-path FILE  [default: output\model.joblib]
+  --random-state INTEGER  [default: 42]
+  --model [tree|knn]      [default: tree]
+  --help                  Show this message and exit.
+```
+
 
 ## Development
 
@@ -65,6 +89,10 @@ poetry install
 Screenshort from MLFlow
 
 ![MLFlow](https://github.com/slobby/ml_task9/blob/master/pic/ml.png)
+
+Screenshort from MLFlow
+
+![MLFlow](https://github.com/slobby/ml_task9/blob/master/pic/ml_2.png)
 
 Screenshort from flake and black
 

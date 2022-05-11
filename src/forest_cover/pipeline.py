@@ -10,7 +10,7 @@ from forest_cover.constants import MODELS
 
 def create_pipeline(
     model: str,
-    use_scaler: bool,
+    use_scaler: bool = True,
     n_estimators: int = 100,
     max_depth: Union[int, None] = None,
     max_features: Union[float, str] = "auto",
