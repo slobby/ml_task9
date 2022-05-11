@@ -99,7 +99,7 @@ Screenshort from flake and black
 To run black run the following command:
 
 ```
-poetry run blak .
+poetry run black .
 ```
 
 To run flake8 run the following command:
