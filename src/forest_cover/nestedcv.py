@@ -1,7 +1,5 @@
 import mlflow
 from pathlib import Path
-from typing import Any, Union
-import pandas as pd
 from joblib import dump
 from sklearn.compose import ColumnTransformer
 
@@ -11,14 +9,14 @@ from sklearn.pipeline import Pipeline
 
 from sklearn.preprocessing import RobustScaler
 
-from .constants import (
-    DATA_DIR,
-    DATA_PATH,
-    MODEL_PATH,
-    MODELS,
-    OUTPUT_DIR
+from .constants import DATA_DIR, DATA_PATH, MODEL_PATH, MODELS, OUTPUT_DIR
+from .utils import (
+    get_cat_num,
+    get_dataset,
+    get_model_space,
+    validate_metrics,
+    write_to_mlflow,
 )
-from .utils import get_cat_num, get_dataset, get_model_space, validate_metrics, write_to_mlflow
 
 
 @click.command()
@@ -43,16 +41,21 @@ from .utils import get_cat_num, get_dataset, get_model_space, validate_metrics, 
     type=click.Choice(MODELS, case_sensitive=False),
     show_default=True,
 )
-def nested(
-    input_path: Path,
-    output_path: Path,
-    random_state: int,
-    model: str
-) -> None:
+def nested(input_path: Path, output_path: Path, random_state: int, model: str) -> None:
     features_train, target_train = get_dataset(input_path)
     categoricals, numericals = get_cat_num(features_train)
 
-    pipeline = Pipeline(steps=[("scaller", ColumnTransformer(transformers=[("rs", RobustScaler(), numericals)], remainder="passthrough"))])
+    pipeline = Pipeline(
+        steps=[
+            (
+                "scaller",
+                ColumnTransformer(
+                    transformers=[("rs", RobustScaler(), numericals)],
+                    remainder="passthrough",
+                ),
+            )
+        ]
+    )
     features_train = pipeline.fit_transform(features_train)
 
     cv_outer = KFold(n_splits=10, shuffle=True, random_state=random_state)
@@ -65,16 +68,14 @@ def nested(
             y_train, y_test = target_train[train_ix], target_train[test_ix]
             cv_inner = KFold(n_splits=3, shuffle=True, random_state=random_state)
             clr, space = get_model_space(model, random_state)
-            search = GridSearchCV(clr, space, scoring='accuracy', cv=cv_inner, refit=True)
+            search = GridSearchCV(
+                clr, space, scoring="accuracy", cv=cv_inner, refit=True
+            )
             result = search.fit(X_train, y_train)
             best_model = result.best_estimator_
             params = result.best_params_
-            params['model'] = model
-            params['use_scaler'] = True
-            write_to_mlflow(best_model,
-                            validate_metrics,
-                            X_test,
-                            y_test,
-                            params)
+            params["model"] = model
+            params["use_scaler"] = True
+            write_to_mlflow(best_model, validate_metrics, X_test, y_test, params)
             dump(pipeline, output_path)
             click.echo(f"Model is saved to {output_path}.")

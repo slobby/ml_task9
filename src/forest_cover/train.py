@@ -1,7 +1,6 @@
 import click
 from joblib import dump
 import mlflow
-import pandas as pd
 from pathlib import Path
 
 from forest_cover.constants import (
@@ -68,14 +67,16 @@ def train(
     neighbors: int,
     weights: str,
 ) -> None:
-    params = {'model': model,
-              'use_scaler': use_scaler,
-              'n_estimators': estimators,
-              'max_depth': max_depth,
-              'max_features': max_features,
-              'min_samples_leaf': min_samples_leaf,
-              'n_neighbors': neighbors,
-              'weights': weights}
+    params = {
+        "model": model,
+        "use_scaler": use_scaler,
+        "n_estimators": estimators,
+        "max_depth": max_depth,
+        "max_features": max_features,
+        "min_samples_leaf": min_samples_leaf,
+        "n_neighbors": neighbors,
+        "weights": weights,
+    }
     features_train, target_train = get_dataset(input_path)
     categoricals, numericals = get_cat_num(features_train)
 
@@ -94,10 +95,8 @@ def train(
     )
 
     with mlflow.start_run():
-        write_to_mlflow(pipeline,
-                        cv_validate_metrics,
-                        features_train,
-                        target_train,
-                        params)
+        write_to_mlflow(
+            pipeline, cv_validate_metrics, features_train, target_train, params
+        )
         dump(pipeline, output_path)
         click.echo(f"Model is saved to {output_path}.")

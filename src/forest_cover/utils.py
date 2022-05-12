@@ -10,7 +10,6 @@ from sklearn.model_selection import cross_validate
 from sklearn.pipeline import Pipeline
 from .config import space_knn, space_random_forest
 from .constants import MODELS, TARGET
-from .pipeline import create_pipeline
 
 
 def get_dataset(input_path: Path) -> tuple[pd.DataFrame, pd.Series]:
@@ -18,7 +17,7 @@ def get_dataset(input_path: Path) -> tuple[pd.DataFrame, pd.Series]:
     return (dataset.drop(TARGET, axis=1), dataset[TARGET])
 
 
-def get_cat_num(features_train: pd.DataFrame) -> tuple[list, list]:
+def get_cat_num(features_train: pd.DataFrame) -> tuple[list[str], list[str]]:
     categoricals = []
     numericals = []
     for col in features_train.columns:
@@ -29,7 +28,10 @@ def get_cat_num(features_train: pd.DataFrame) -> tuple[list, list]:
     return (categoricals, numericals)
 
 
-def get_model_space(model: str, random_state: int) -> tuple[Union[RandomForestClassifier, KNeighborsClassifier], dict[str, list]]:
+def get_model_space(
+    model: str, random_state: int
+) -> tuple[Union[RandomForestClassifier, KNeighborsClassifier],
+           dict[str, list[Union[int, float, str]]]]:
     space = dict()
     if model == MODELS[0]:
         clr = RandomForestClassifier(random_state=random_state)
@@ -59,36 +61,38 @@ def validate_metrics(
     y_pred = estimator.predict_proba(features_train)
     return (
         accuracy_score(target_train, yhat),
-        f1_score(target_train, yhat, average='weighted'),
-        roc_auc_score(target_train, y_pred, average='weighted', multi_class='ovr')
+        f1_score(target_train, yhat, average="weighted"),
+        roc_auc_score(target_train, y_pred, average="weighted", multi_class="ovr"),
     )
 
 
-def write_to_mlflow(estimator: Any,
-                    validator: Callable,
-                    features_train: pd.DataFrame,
-                    target_train: pd.Series,
-                    params: dict) -> None:
+def write_to_mlflow(
+    estimator: Any,
+    validator: Callable[[Any, pd.DataFrame, pd.Series], tuple[float, float, float]],
+    features_train: pd.DataFrame,
+    target_train: pd.Series,
+    params: dict[str, Any],
+) -> None:
 
-    accuracy, f1, roc_auc = validator(
-        estimator, features_train, target_train
-    )
+    accuracy, f1, roc_auc = validator(estimator, features_train, target_train)
 
     model_t = (
-        "RandomForestClassifier" if params['model'] == MODELS[0] else "KNeighborsClassifier"
+        "RandomForestClassifier"
+        if params["model"] == MODELS[0]
+        else "KNeighborsClassifier"
     )
     mlflow.sklearn.log_model(estimator, "models")
     mlflow.log_metric("accuracy", accuracy)
     mlflow.log_metric("f1", f1)
     mlflow.log_metric("roc_auc", roc_auc)
-    mlflow.log_param("use_scaler", params['use_scaler'])
+    mlflow.log_param("use_scaler", params["use_scaler"])
     mlflow.log_param("model", model_t)
 
-    if params['model'] == MODELS[0]:
-        mlflow.log_param('n_estimators', params['n_estimators'])
-        mlflow.log_param("max_depth", params['max_depth'])
-        mlflow.log_param("max_features", params['max_features'])
-        mlflow.log_param("min_samples_leaf", params['min_samples_leaf'])
-    if params['model'] == MODELS[1]:
-        mlflow.log_param("neighbors", params['n_neighbors'])
-        mlflow.log_param("weights", params['weights'])
+    if params["model"] == MODELS[0]:
+        mlflow.log_param("n_estimators", params["n_estimators"])
+        mlflow.log_param("max_depth", params["max_depth"])
+        mlflow.log_param("max_features", params["max_features"])
+        mlflow.log_param("min_samples_leaf", params["min_samples_leaf"])
+    if params["model"] == MODELS[1]:
+        mlflow.log_param("neighbors", params["n_neighbors"])
+        mlflow.log_param("weights", params["weights"])

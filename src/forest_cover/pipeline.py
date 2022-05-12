@@ -19,7 +19,7 @@ def create_pipeline(
     neighbors: int = 5,
     weights: str = "uniform",
     categoricals: list[str] = list(),
-    numericals: list[str] = list()
+    numericals: list[str] = list(),
 ) -> Pipeline:
     pipeline_steps = []
     if use_scaler:
